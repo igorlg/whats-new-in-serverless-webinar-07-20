@@ -1,0 +1,157 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AWS Lambda File System Demo
+
+Parameters:
+  VPCId:
+    Description: Security Groups for FS
+    Type: AWS::EC2::VPC::Id
+
+  DefaultSecurityGroupId:
+    Description: Security Groups for FS
+    Type: AWS::EC2::SecurityGroup::Id
+    
+  PrivateSubnets:
+    Description: Private Subnet IDs
+    Type: List<AWS::EC2::Subnet::Id>
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 10
+
+Resources:
+
+  LambdaFs:
+    Type: AWS::EFS::FileSystem
+    Properties: 
+      FileSystemTags:
+        - Key: Name
+          Value: LambdaFS
+      PerformanceMode: generalPurpose
+      ThroughputMode: bursting
+  
+  LambdaFsMountTarget1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref LambdaFs
+      SubnetId: !Select [ 0, !Ref PrivateSubnets ] 
+      SecurityGroups:
+      - !Ref MountTargetSecurityGroup
+
+  LambdaFsMountTarget2:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref LambdaFs
+      SubnetId: !Select [ 1, !Ref PrivateSubnets ] 
+      SecurityGroups:
+      - !Ref MountTargetSecurityGroup
+
+  LambdaFsMountTarget3:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref LambdaFs
+      SubnetId: !Select [ 2, !Ref PrivateSubnets ] 
+      SecurityGroups:
+      - !Ref MountTargetSecurityGroup
+  
+  LambdaFsAccessPoint:
+      Type: 'AWS::EFS::AccessPoint'
+      Properties:
+        FileSystemId: !Ref LambdaFs
+        PosixUser:
+          Uid: "1000"
+          Gid: "1000"
+        RootDirectory:
+          CreationInfo:
+            OwnerGid: "1000"
+            OwnerUid: "1000"
+            Permissions: "0777"
+          Path: "/data"
+
+  MountTargetSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPCId
+      GroupDescription: Security group for EFS mount targets
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 2049
+        ToPort: 2049
+        SourceSecurityGroupId: !Ref DefaultSecurityGroupId
+ 
+  WhatsNewLambdaFsFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: lambda-fs-function/
+      Handler: lambda-fs
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref DefaultSecurityGroupId
+        SubnetIds:
+          - !Select [ 0, !Ref PrivateSubnets ] 
+          - !Select [ 1, !Ref PrivateSubnets ] 
+          - !Select [ 2, !Ref PrivateSubnets ]
+      Role: !GetAtt  WhatsNewLambdaFsFunctionRole.Arn
+      Runtime: go1.x
+      Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
+      Events:
+        CatchAll:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /fs
+            Method: ANY
+      Environment:
+        Variables:
+          EFS_PATH: "/mnt/data"
+      FileSystemConfigs:
+        - Arn: !GetAtt LambdaFsAccessPoint.Arn
+          LocalMountPath: "/mnt/data"
+    DependsOn: "LambdaFsMountTarget1"
+
+  WhatsNewLambdaFsFunctionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            -
+              Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientFullAccess
+          - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  WhatsNewLambdaFsAPI:
+    Description: "API Gateway endpoint URL for Prod environment for Whats New LambdaFs Function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/fs/"
+  WhatsNewLambdaFsFunction:
+    Description: "Whats New LambdaFs Function ARN"
+    Value: !GetAtt WhatsNewLambdaFsFunction.Arn
+  WhatsNewLambdaFsFunctionIamRole:
+    Description: "Implicit IAM Role created for Whats New LambdaFs Function function"
+    Value: !GetAtt WhatsNewLambdaFsFunctionRole.Arn
+  MountTarget1ID:
+    Description: Mount target ID
+    Value: !Ref LambdaFsMountTarget1
+  MountTarget2ID:
+    Description: Mount target ID
+    Value: !Ref LambdaFsMountTarget2
+  MountTarget3ID:
+    Description: Mount target ID
+    Value: !Ref LambdaFsMountTarget3
+  FileSystemID:
+    Description: File system ID
+    Value: !Ref LambdaFs

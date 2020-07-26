@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "whats-new-lambda-fs"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-tgrtypz6pq8i"
+s3_prefix = "whats-new-lambda-fs"
+region = "ap-southeast-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "PrivateSubnets=\"subnet-0c82497762cc410b3,subnet-045d16fc6e76612dc,subnet-0ae1177f5051364fe\" VPCId=\"vpc-0edd74a9ab9b63bc3\" DefaultSecurityGroupId=\"sg-0d794632f80cbaf52\""
+

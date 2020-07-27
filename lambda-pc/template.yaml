@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AWS Lambda Provisioned Concurrency AutoScaling Demo
+
+Parameters:
+  Alias:
+    Description: AutoPublishAlias name
+    Type: String
+    Default: live
+  ProvisionedConcurrencyExecutions:
+    Description: Number of PC executions
+    Type: Number
+    Default: 1
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 5
+
+Resources:
+  WhatsNewLambdaPcFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: lambda-pc-function/
+      Handler: lambda-pc
+      Runtime: go1.x
+      Memory: 256
+      Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
+      AutoPublishAlias: !Ref Alias
+      DeploymentPreference:
+        Type: AllAtOnce
+      ProvisionedConcurrencyConfig:
+        ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrencyExecutions
+
+
+Outputs:
+  WhatsNewLambdaPcFunction:
+    Description: "First Lambda Function ARN"
+    Value: !GetAtt WhatsNewLambdaPcFunction.Arn
+  WhatsNewLambdaPcFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt WhatsNewLambdaPcFunctionRole.Arn

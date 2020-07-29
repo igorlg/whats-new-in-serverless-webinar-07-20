@@ -4,9 +4,6 @@ Description: >
   AWS Lambda demo using Amazon RDS Proxy with Amazon Aurora with MySQL 5.6 compatibility
 
 Parameters:
-  VPCId:
-    Description: Security Groups for FS
-    Type: AWS::EC2::VPC::Id
 
   DefaultSecurityGroupId:
     Description: Security Groups for FS
@@ -15,6 +12,18 @@ Parameters:
   PrivateSubnets:
     Description: Private Subnet IDs
     Type: List<AWS::EC2::Subnet::Id>
+
+  ConnectionString:
+    Description: Database connection string
+    Type: String
+
+  DbUser:
+    Description: Database username
+    Type: String
+  
+  DbPassword:
+    Description: Database user password
+    Type: String
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -45,9 +54,38 @@ Resources:
             Method: GET
       Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
         Variables:
-          CONN: sliedig-dev-db-instance.c2qpqwyhr1nq.ap-southeast-2.rds.amazonaws.com:3306
-          DBUSER: sliedig
-          DBPASS: c!eph9-X
+          CONN: !Ref ConnectionString
+          DBUSER: !Ref DbUser
+          DBPASS: !Ref DbPassword
+
+
+  WhatsNewLambdaRdsProxyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - rds.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                - "secretsmanager:GetResourcePolicy"
+                - "secretsmanager:GetSecretValue"
+                - "secretsmanager:DescribeSecret"
+                - "secretsmanager:ListSecretVersionIds"
+                Resource: '*'
+    
+
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
@@ -57,8 +95,8 @@ Outputs:
     Description: "API Gateway endpoint URL for Prod environment for First Function"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/search/"
   WhatsNewLambdaRdsProxyFunction:
-    Description: "First Lambda Function ARN"
+    Description: "RDS Proxy Function ARN"
     Value: !GetAtt WhatsNewLambdaRdsProxyFunction.Arn
   WhatsNewLambdaRdsProxyFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
+    Description: "Implicit IAM Role created for function"
     Value: !GetAtt WhatsNewLambdaRdsProxyFunctionRole.Arn

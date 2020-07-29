@@ -30,7 +30,7 @@ func init() {
 	connectionString = os.Getenv("CONN")
 	dbUser = os.Getenv("DBUSER")
 	dbPass = os.Getenv("DBPASS")
-	dataSource = dbUser + ":" + dbPass + "@tcp(" + connectionString + "/employees"
+	dataSource = dbUser + ":" + dbPass + "@tcp(" + connectionString + ")/employees"
 }
 
 func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {

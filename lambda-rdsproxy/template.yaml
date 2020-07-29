@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AWS Lambda demo using Amazon RDS Proxy with Amazon Aurora with MySQL 5.6 compatibility
+
+Parameters:
+  VPCId:
+    Description: Security Groups for FS
+    Type: AWS::EC2::VPC::Id
+
+  DefaultSecurityGroupId:
+    Description: Security Groups for FS
+    Type: AWS::EC2::SecurityGroup::Id
+
+  PrivateSubnets:
+    Description: Private Subnet IDs
+    Type: List<AWS::EC2::Subnet::Id>
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 5
+
+Resources:
+
+  WhatsNewLambdaRdsProxyFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: lambda-rdsproxy-function/
+      Handler: lambda-rdsproxy
+      Runtime: go1.x
+      Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref DefaultSecurityGroupId
+        SubnetIds:
+          - !Select [ 0, !Ref PrivateSubnets ] 
+          - !Select [ 1, !Ref PrivateSubnets ] 
+          - !Select [ 2, !Ref PrivateSubnets ]
+      Events:
+        CatchAll:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /search
+            Method: GET
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          CONN: sliedig-dev-db-instance.c2qpqwyhr1nq.ap-southeast-2.rds.amazonaws.com:3306
+          DBUSER: sliedig
+          DBPASS: c!eph9-X
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  HelloWorldAPI:
+    Description: "API Gateway endpoint URL for Prod environment for First Function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/search/"
+  WhatsNewLambdaRdsProxyFunction:
+    Description: "First Lambda Function ARN"
+    Value: !GetAtt WhatsNewLambdaRdsProxyFunction.Arn
+  WhatsNewLambdaRdsProxyFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt WhatsNewLambdaRdsProxyFunctionRole.Arn

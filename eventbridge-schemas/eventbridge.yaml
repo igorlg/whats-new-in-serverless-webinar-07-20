@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: AWS Lambda demo using Amazon EventBridge
+Resources:
+  EcommerceEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: "ecommerce"
+
+  InventoryEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: "inventory"
+
+  InventoryCatchallRule:
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: Catch all events for Inventory bus
+      EventBusName: !Ref InventoryEventBus
+      EventPattern:
+        account:
+        - !Ref AWS::AccountId
+      Name: catchall-inventory
+      State: ENABLED
+      Targets: 
+        - Arn: !GetAtt InventoryCatchallLogGroup.Arn
+          Id: catchall-inventory
+
+  InventoryCatchallLogGroup: 
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: /aws/events/catchall-inventory
+      RetentionInDays: 5
+
+  InventorySQS:
+    Type: AWS::SQS::Queue
+
+Outputs:
+  EcommerceEventBusArn:
+    Description: ARN for the Orders EventBus
+    Value: !GetAtt EcommerceEventBus.Arn
+  InventoryEventArn:
+    Description: ARN for the Inventory EventBus
+    Value: !GetAtt EcommerceEventBus.Arn
+  InventorySQSArn: 
+      Description: "ARN of new AmazonSQS Queue"
+      Value: !GetAtt InventorySQS.Arn

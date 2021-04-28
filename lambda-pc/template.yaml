@@ -25,7 +25,7 @@ Resources:
       CodeUri: lambda-pc-function/
       Handler: lambda-pc
       Runtime: go1.x
-      Memory: 256
+      MemorySize: 256
       Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
       AutoPublishAlias: !Ref Alias
       DeploymentPreference:

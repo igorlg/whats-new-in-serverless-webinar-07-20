@@ -9,6 +9,10 @@ Parameters:
   FunctionName:
     Description: Name of the function
     Type: String
+  ScalingPolicyTargetValue:
+    Description: The % of utilization to keep as Provisioned Concurrency
+    Type: Number
+    Default: 0.7
     
 Resources:
   WhatsNewLambdaPcFunctionScalableTarget:
@@ -19,21 +23,31 @@ Resources:
       MaxCapacity: 100
       MinCapacity: 1
       ResourceId: !Sub function:${FunctionName}:${FunctionAlias}
-      RoleARN: !Join 
-        - ':'
-        - - 'arn:aws:iam:'
-          - !Ref 'AWS::AccountId'
-          - role/aws-service-role/lambda.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_Lambda
+      RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/lambda.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_LambdaConcurrency'
       ScheduledActions:
-        - EndTime: '2020-08-01T12:00:00.000Z'
+        - ScheduledActionName: ScaleOut
+          # StartTime: '2021-04-30T12:00:00.000Z'
+          # EndTime:   '2021-04-30T12:00:00.000Z'
+          Schedule: cron(45 04 * * ? *)
           ScalableTargetAction:
             MaxCapacity: 10
             MinCapacity: 10
-          Schedule: cron(45 04 * * ? *)
-          ScheduledActionName: ScaleOut
-        - EndTime: '2020-08-01T12:00:00.000Z'
+        - ScheduledActionName: ScaleIn
+          Schedule: cron(50 04 * * ? *)
           ScalableTargetAction:
             MaxCapacity: 1
             MinCapacity: 1
-          Schedule: cron(50 04 * * ? *)
-          ScheduledActionName: ScaleIn
+  WhatsNewLambdaPcFunctionScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${AWS::StackName}-LambdaPC-TargetTrackingPolicy'
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref WhatsNewLambdaPcFunctionScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        DisableScaleIn: False  # Default: True
+        ScaleInCooldown: 5     # Default: 0
+        ScaleOutCooldown: 5    # Default: 0
+        PredefinedMetricSpecification:
+          PredefinedMetricType: LambdaProvisionedConcurrencyUtilization
+        TargetValue: !Ref ScalingPolicyTargetValue
+

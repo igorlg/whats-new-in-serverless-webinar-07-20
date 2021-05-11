@@ -7,6 +7,9 @@ config:
   plugins:
     aws-sigv4:
       serviceName: lambda
+    cloudwatch:
+      namespace: "WhatsNew-LambdaPC"
+      testName: "WhatsNew-LambdaPC"
 
 scenarios:
   - flow:

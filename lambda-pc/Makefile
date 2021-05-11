@@ -1,4 +1,4 @@
-.PHONY: build deploy test clean purge
+.PHONY: build deploy deploy-autoscaling deploy-sam test clean purge
 
 AWS_REGION_NAME			= ap-southeast-2
 FUNCTION_STACK_NAME    	= whatsnew-lambda-pc-main
@@ -12,15 +12,19 @@ TEST_TEMPLATE_FILE  	= test/config_template.yaml
 build: clean
 	sam build
 
-deploy: build
+deploy: deploy-sam deploy-autoscaling
+
+deploy-autoscaling:
+	aws cloudformation deploy \
+		--stack-name $(AUTOSCALING_STACK_NAME) \
+		--parameter-overrides FunctionStackName=$(FUNCTION_STACK_NAME) \
+		--template-file autoscaling.yaml \
+	|| true
+
+deploy-sam: build
 	sam deploy \
 		--stack-name $(FUNCTION_STACK_NAME) \
 	|| true
-	# aws cloudformation deploy \
-	# 	--template-file autoscaling.yaml \
-	# 	--stack-name $(AUTOSCALING_STACK_NAME) \
-	# 	--parameter-overrides FunctionStackName=$(FUNCTION_STACK_NAME) \
-	# || true
 
 test:
 	@sed    -e "s/<FUNCTION_ALIAS>/$(FUNCTION_ALIAS)/g" \

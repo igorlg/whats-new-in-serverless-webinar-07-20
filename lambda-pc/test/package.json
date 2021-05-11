@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "artillery-plugin-aws-sigv4": "^0.0.5"
+    "artillery-plugin-aws-sigv4": "^0.0.5",
+    "artillery-plugin-cloudwatch": "^0.1.7"
   }
 }

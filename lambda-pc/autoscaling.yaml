@@ -11,10 +11,10 @@ Parameters:
     Default: 0.7
   ScaleInSchedule:
     Type: String
-    Default: cron(50 04 * * ? *)
+    Default: cron(00 12 * * ? *)
   ScaleOutSchedule:
     Type: String
-    Default: cron(45 04 * * ? *)
+    Default: cron(00 14 * * ? *)
     
 Resources:
   WhatsNewLambdaPcFunctionScalableTarget:
@@ -46,7 +46,7 @@ Resources:
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref WhatsNewLambdaPcFunctionScalableTarget
       TargetTrackingScalingPolicyConfiguration:
-        DisableScaleIn: False  # Default: True
+        DisableScaleIn: False  # Default: False
         ScaleInCooldown: 0     # Default: 0
         ScaleOutCooldown: 0    # Default: 0
         PredefinedMetricSpecification:

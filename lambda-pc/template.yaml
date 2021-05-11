@@ -12,6 +12,16 @@ Parameters:
     Description: Number of PC executions
     Type: Number
     Default: 1
+  ScalingPolicyTargetValue:
+    Description: The % of utilization to keep as Provisioned Concurrency
+    Type: Number
+    Default: 0.7
+  ScaleInSchedule:
+    Type: String
+    Default: cron(50 04 * * ? *)
+  ScaleOutSchedule:
+    Type: String
+    Default: cron(45 04 * * ? *)
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -32,12 +42,59 @@ Resources:
         Type: AllAtOnce
       ProvisionedConcurrencyConfig:
         ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrencyExecutions
+  WhatsNewLambdaPcFunctionParameterAlias:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/${AWS::StackName}/function/alias'
+      # Description: ''
+      Tier: Standard
+      Type: String
+      Value: !Sub '${WhatsNewLambdaPcFunction}:${Alias}'
 
+  WhatsNewLambdaPcFunctionScalableTarget:
+    DependsOn: WhatsNewLambdaPcFunction
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties: 
+      ServiceNamespace: lambda
+      ScalableDimension: lambda:function:ProvisionedConcurrency
+      MaxCapacity: 100
+      MinCapacity: 1
+      ResourceId: !GetAtt WhatsNewLambdaPcFunction.Alias
+      RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/lambda.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_LambdaConcurrency'
+      ScheduledActions:
+        - ScheduledActionName: ScaleOut
+          # StartTime: '2021-04-30T12:00:00.000Z'
+          # EndTime:   '2021-04-30T12:00:00.000Z'
+          Schedule: !Ref ScaleOutSchedule
+          ScalableTargetAction:
+            MaxCapacity: 10
+            MinCapacity: 10
+        - ScheduledActionName: ScaleIn
+          Schedule: !Ref ScaleInSchedule
+          ScalableTargetAction:
+            MaxCapacity: 1
+            MinCapacity: 1
+
+  WhatsNewLambdaPcFunctionScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${AWS::StackName}-LambdaPC-TargetTrackingPolicy'
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref WhatsNewLambdaPcFunctionScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        DisableScaleIn: False  # Default: True
+        ScaleInCooldown: 0     # Default: 0
+        ScaleOutCooldown: 0    # Default: 0
+        TargetValue: !Ref ScalingPolicyTargetValue
+        PredefinedMetricSpecification:
+          PredefinedMetricType: LambdaProvisionedConcurrencyUtilization
 
 Outputs:
   WhatsNewLambdaPcFunction:
     Description: "First Lambda Function ARN"
     Value: !GetAtt WhatsNewLambdaPcFunction.Arn
+  WhatsNewLambdaPcFunctionAlias:
+    Value: !GetAtt WhatsNewLambdaPcFunction.Alias
   WhatsNewLambdaPcFunctionIamRole:
     Description: "Implicit IAM Role created for Hello World function"
     Value: !GetAtt WhatsNewLambdaPcFunctionRole.Arn

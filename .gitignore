@@ -35,3 +35,6 @@
 /Godeps/
 
 # End of https://www.toptal.com/developers/gitignore/api/go
+**/.vscode
+**/node_modules/
+

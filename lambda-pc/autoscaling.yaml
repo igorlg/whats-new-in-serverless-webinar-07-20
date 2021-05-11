@@ -2,17 +2,19 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description:   AWS Lambda Provisioned Concurrency AutoScaling Demo with Application AutoScaling
 
 Parameters:
-  FunctionAlias:
-    Description: Name of the function alias
-    Type: String
-    Default: live
-  FunctionName:
-    Description: Name of the function
+  FunctionStackName:
+    Description: The name of the CloudFormation Stack that deployed the Function
     Type: String
   ScalingPolicyTargetValue:
     Description: The % of utilization to keep as Provisioned Concurrency
     Type: Number
     Default: 0.7
+  ScaleInSchedule:
+    Type: String
+    Default: cron(50 04 * * ? *)
+  ScaleOutSchedule:
+    Type: String
+    Default: cron(45 04 * * ? *)
     
 Resources:
   WhatsNewLambdaPcFunctionScalableTarget:
@@ -22,18 +24,18 @@ Resources:
       ScalableDimension: lambda:function:ProvisionedConcurrency
       MaxCapacity: 100
       MinCapacity: 1
-      ResourceId: !Sub function:${FunctionName}:${FunctionAlias}
+      ResourceId: !Sub 'function:{{resolve:ssm:/${FunctionStackName}/function/alias}}'
       RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/lambda.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_LambdaConcurrency'
       ScheduledActions:
         - ScheduledActionName: ScaleOut
           # StartTime: '2021-04-30T12:00:00.000Z'
           # EndTime:   '2021-04-30T12:00:00.000Z'
-          Schedule: cron(45 04 * * ? *)
+          Schedule: !Ref ScaleOutSchedule
           ScalableTargetAction:
             MaxCapacity: 10
             MinCapacity: 10
         - ScheduledActionName: ScaleIn
-          Schedule: cron(50 04 * * ? *)
+          Schedule: !Ref ScaleInSchedule
           ScalableTargetAction:
             MaxCapacity: 1
             MinCapacity: 1
@@ -45,9 +47,8 @@ Resources:
       ScalingTargetId: !Ref WhatsNewLambdaPcFunctionScalableTarget
       TargetTrackingScalingPolicyConfiguration:
         DisableScaleIn: False  # Default: True
-        ScaleInCooldown: 5     # Default: 0
-        ScaleOutCooldown: 5    # Default: 0
+        ScaleInCooldown: 0     # Default: 0
+        ScaleOutCooldown: 0    # Default: 0
         PredefinedMetricSpecification:
           PredefinedMetricType: LambdaProvisionedConcurrencyUtilization
         TargetValue: !Ref ScalingPolicyTargetValue
-

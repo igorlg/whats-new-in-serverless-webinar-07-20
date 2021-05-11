@@ -9,7 +9,7 @@ config:
       serviceName: lambda
     cloudwatch:
       namespace: "WhatsNew-LambdaPC"
-      testName: "WhatsNew-LambdaPC"
+      testName: "<FUNCTION_NAME>"
 
 scenarios:
   - flow:

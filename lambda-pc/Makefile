@@ -1,9 +1,10 @@
-.PHONY: build deploy deploy-autoscaling deploy-sam test clean purge
+.PHONY: build build-template deploy deploy-autoscaling deploy-sam test clean purge
 
 AWS_REGION_NAME			= ap-southeast-2
 FUNCTION_STACK_NAME    	= whatsnew-lambda-pc-main
 AUTOSCALING_STACK_NAME 	= whatsnew-lambda-pc-autoscaling
 
+FUNCTION_NAME 			= "$(shell aws ssm get-parameter --name '/$(FUNCTION_STACK_NAME)/function/name'  | jq -r '.Parameter.Value' 2>/dev/null)"
 FUNCTION_ALIAS 			= "$(shell aws ssm get-parameter --name '/$(FUNCTION_STACK_NAME)/function/alias' | jq -r '.Parameter.Value' 2>/dev/null)"
 
 TEST_CONFIG_FILE		= test/config.yaml
@@ -28,6 +29,7 @@ deploy-sam: build
 
 test:
 	@sed    -e "s/<FUNCTION_ALIAS>/$(FUNCTION_ALIAS)/g" \
+			-e "s/<FUNCTION_NAME>/$(FUNCTION_NAME)/g" \
 			-e "s/<AWS_REGION>/$(AWS_REGION_NAME)/g" \
 			$(TEST_TEMPLATE_FILE) > $(TEST_CONFIG_FILE)
 
@@ -42,4 +44,4 @@ clean:
 
 purge: clean
 	aws cloudformation delete-stack --stack-name $(FUNCTION_STACK_NAME)
-	# aws cloudformation delete-stack --stack-name $(AUTOSCALING_STACK_NAME)
+	aws cloudformation delete-stack --stack-name $(AUTOSCALING_STACK_NAME)

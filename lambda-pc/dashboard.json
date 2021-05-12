@@ -1,10 +1,10 @@
 {
     "widgets": [
         {
-            "height": 9,
-            "width": 12,
+            "height": 6,
+            "width": 9,
             "y": 0,
-            "x": 0,
+            "x": 15,
             "type": "metric",
             "properties": {
                 "period": 1,
@@ -23,7 +23,7 @@
         {
             "height": 9,
             "width": 12,
-            "y": 0,
+            "y": 6,
             "x": 12,
             "type": "metric",
             "properties": {
@@ -42,9 +42,9 @@
             }
         },
         {
-            "height": 6,
-            "width": 15,
-            "y": 12,
+            "height": 9,
+            "width": 12,
+            "y": 6,
             "x": 0,
             "type": "metric",
             "properties": {
@@ -67,7 +67,7 @@
         {
             "height": 3,
             "width": 15,
-            "y": 9,
+            "y": 0,
             "x": 0,
             "type": "metric",
             "properties": {
@@ -89,11 +89,11 @@
             }
         },
         {
-            "type": "metric",
-            "x": 15,
-            "y": 9,
-            "width": 9,
             "height": 3,
+            "width": 15,
+            "y": 3,
+            "x": 0,
+            "type": "metric",
             "properties": {
                 "metrics": [
                     [ "AWS/Lambda", "ProvisionedConcurrentExecutions", "FunctionName", "${WhatsNewLambdaPcFunction}" ],

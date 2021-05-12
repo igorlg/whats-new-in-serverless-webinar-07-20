@@ -2,8 +2,15 @@ config:
   target: "https://lambda.<AWS_REGION>.amazonaws.com"
   phases:
     - duration: 600
-      arrivalRate: 1
-      maxVusers: 20
+      arrivalRate: 5
+      rampTo: 50
+    - duration: 600
+      arrivalRate: 5
+      rampTo: 50
+    - duration: 600
+      arrivalRate: 5
+      rampTo: 50
+      # maxVusers: 50
   plugins:
     aws-sigv4:
       serviceName: lambda

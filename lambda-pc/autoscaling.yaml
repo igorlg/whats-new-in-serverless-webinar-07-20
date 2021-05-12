@@ -11,10 +11,10 @@ Parameters:
     Default: 0.7
   ScaleInSchedule:
     Type: String
-    Default: cron(00 12 * * ? *)
+    Default: cron(00 * * * ? *)
   ScaleOutSchedule:
     Type: String
-    Default: cron(00 14 * * ? *)
+    Default: cron(30 * * * ? *)
     
 Resources:
   WhatsNewLambdaPcFunctionScalableTarget:
@@ -32,8 +32,8 @@ Resources:
           # EndTime:   '2021-04-30T12:00:00.000Z'
           Schedule: !Ref ScaleOutSchedule
           ScalableTargetAction:
-            MaxCapacity: 10
-            MinCapacity: 10
+            MaxCapacity: 50
+            MinCapacity: 50
         - ScheduledActionName: ScaleIn
           Schedule: !Ref ScaleInSchedule
           ScalableTargetAction:

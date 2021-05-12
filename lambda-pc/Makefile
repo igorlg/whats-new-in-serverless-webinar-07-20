@@ -11,7 +11,7 @@ TEST_CONFIG_FILE		= test/config.yaml
 TEST_TEMPLATE_FILE  	= test/config_template.yaml
 
 build: clean
-	sam build
+	sam build -u
 
 deploy: deploy-sam deploy-autoscaling
 

@@ -1,7 +1,7 @@
-*/.aws-sam
-.idea
-*/samconfig.toml
+**/.aws-sam
+**/.idea
 **/samconfig.toml
+**/template.tmp.yaml
 
 # Created by https://www.toptal.com/developers/gitignore/api/go
 # Edit at https://www.toptal.com/developers/gitignore?templates=go

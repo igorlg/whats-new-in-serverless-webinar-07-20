@@ -85,7 +85,8 @@
                 "stat": "Average",
                 "period": 1,
                 "setPeriodToTimeRange": true,
-                "title": "Artillery Data"
+                "title": "Artillery Data",
+                "liveData": true
             }
         },
         {
@@ -102,9 +103,11 @@
                 ],
                 "view": "singleValue",
                 "region": "ap-southeast-2",
-                "stat": "Maximum",
-                "period": 5,
-                "title": "PC Utilization"
+                "start": "-PT1H",
+                "end": "P0D",
+                "period": 1,
+                "title": "PC Utilization",
+                "liveData": true
             }
         }
     ]

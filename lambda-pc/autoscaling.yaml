@@ -2,13 +2,19 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description:   AWS Lambda Provisioned Concurrency AutoScaling Demo with Application AutoScaling
 
 Parameters:
-  FunctionAlias:
-    Description: Name of the function alias
+  FunctionStackName:
+    Description: The name of the CloudFormation Stack that deployed the Function
     Type: String
-    Default: live
-  FunctionName:
-    Description: Name of the function
+  ScalingPolicyTargetValue:
+    Description: The % of utilization to keep as Provisioned Concurrency
+    Type: Number
+    Default: 0.7
+  ScaleInSchedule:
     Type: String
+    Default: cron(00 * * * ? *)
+  ScaleOutSchedule:
+    Type: String
+    Default: cron(30 * * * ? *)
     
 Resources:
   WhatsNewLambdaPcFunctionScalableTarget:
@@ -18,22 +24,29 @@ Resources:
       ScalableDimension: lambda:function:ProvisionedConcurrency
       MaxCapacity: 100
       MinCapacity: 1
-      ResourceId: !Sub function:${FunctionName}:${FunctionAlias}
-      RoleARN: !Join 
-        - ':'
-        - - 'arn:aws:iam:'
-          - !Ref 'AWS::AccountId'
-          - role/aws-service-role/lambda.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_Lambda
+      ResourceId: !Sub 'function:{{resolve:ssm:/${FunctionStackName}/function/alias}}'
+      RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/lambda.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_LambdaConcurrency'
       ScheduledActions:
-        - EndTime: '2020-08-01T12:00:00.000Z'
+        - ScheduledActionName: ScaleOut
+          Schedule: !Ref ScaleOutSchedule
           ScalableTargetAction:
-            MaxCapacity: 10
-            MinCapacity: 10
-          Schedule: cron(45 04 * * ? *)
-          ScheduledActionName: ScaleOut
-        - EndTime: '2020-08-01T12:00:00.000Z'
+            MaxCapacity: 50
+            MinCapacity: 50
+        - ScheduledActionName: ScaleIn
+          Schedule: !Ref ScaleInSchedule
           ScalableTargetAction:
             MaxCapacity: 1
             MinCapacity: 1
-          Schedule: cron(50 04 * * ? *)
-          ScheduledActionName: ScaleIn
+  WhatsNewLambdaPcFunctionScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub '${AWS::StackName}-LambdaPC-TargetTrackingPolicy'
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref WhatsNewLambdaPcFunctionScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        DisableScaleIn: False  # Default: False
+        ScaleInCooldown: 0     # Default: 0
+        ScaleOutCooldown: 0    # Default: 0
+        PredefinedMetricSpecification:
+          PredefinedMetricType: LambdaProvisionedConcurrencyUtilization
+        TargetValue: !Ref ScalingPolicyTargetValue

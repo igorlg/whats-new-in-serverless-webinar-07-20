@@ -1,0 +1,114 @@
+{
+    "widgets": [
+        {
+            "height": 6,
+            "width": 9,
+            "y": 0,
+            "x": 15,
+            "type": "metric",
+            "properties": {
+                "period": 1,
+                "metrics": [
+                    [ "AWS/Lambda", "Duration", "FunctionName", "${WhatsNewLambdaPcFunction}", "Resource", "${WhatsNewLambdaPcFunction}:${Alias}", { "stat": "Minimum" } ],
+                    [ "...", { "stat": "Average" } ],
+                    [ "...", { "stat": "Maximum" } ]
+                ],
+                "region": "ap-southeast-2",
+                "view": "timeSeries",
+                "stacked": false,
+                "title": "Execution Duration",
+                "liveData": true
+            }
+        },
+        {
+            "height": 9,
+            "width": 12,
+            "y": 6,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${WhatsNewLambdaPcFunction}", "Resource", "${WhatsNewLambdaPcFunction}:${Alias}", { "label": "ConcurrentExecutions" } ],
+                    [ ".", "ProvisionedConcurrentExecutions", ".", "." ],
+                    [ ".", "ProvisionedConcurrencySpilloverInvocations", ".", "." ]
+                ],
+                "period": 1,
+                "region": "ap-southeast-2",
+                "title": "Concurrent executions",
+                "view": "timeSeries",
+                "stacked": false,
+                "liveData": true,
+                "stat": "Maximum"
+            }
+        },
+        {
+            "height": 9,
+            "width": 12,
+            "y": 6,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "period": 1,
+                "metrics": [
+                    [ "AWS/Lambda", "ProvisionedConcurrencyUtilization", "FunctionName", "${WhatsNewLambdaPcFunction}", "Resource", "${WhatsNewLambdaPcFunction}:${Alias}", { "stat": "Maximum" } ]
+                ],
+                "region": "ap-southeast-2",
+                "yAxis": {
+                    "left": {
+                        "max": 1
+                    }
+                },
+                "view": "timeSeries",
+                "stacked": false,
+                "title": "ProvisionedConcurrencyUtilization",
+                "liveData": true
+            }
+        },
+        {
+            "height": 3,
+            "width": 15,
+            "y": 0,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "WhatsNew-LambdaPC", "Latency", "CATEGORY", "performance", "TEST_NAME", "${WhatsNewLambdaPcFunction}", "TYPE", "latency", { "label": "Latency - Max", "stat": "Maximum" } ],
+                    [ "...", { "label": "Latency - P99", "stat": "p99" } ],
+                    [ "...", { "label": "Latency - Avg" } ],
+                    [ "...", { "label": "Samples", "stat": "SampleCount" } ]
+                ],
+                "view": "singleValue",
+                "stacked": true,
+                "region": "ap-southeast-2",
+                "start": "-PT1H",
+                "end": "P0D",
+                "stat": "Average",
+                "period": 1,
+                "setPeriodToTimeRange": true,
+                "title": "Artillery Data",
+                "liveData": true
+            }
+        },
+        {
+            "height": 3,
+            "width": 15,
+            "y": 3,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/Lambda", "ProvisionedConcurrentExecutions", "FunctionName", "${WhatsNewLambdaPcFunction}" ],
+                    [ ".", "ProvisionedConcurrencySpilloverInvocations", ".", "." ],
+                    [ ".", "ProvisionedConcurrencyInvocations", ".", ".", { "visible": false, "stat": "Sum" } ]
+                ],
+                "view": "singleValue",
+                "region": "ap-southeast-2",
+                "start": "-PT1H",
+                "end": "P0D",
+                "period": 1,
+                "title": "PC Utilization",
+                "liveData": true
+            }
+        }
+    ]
+}

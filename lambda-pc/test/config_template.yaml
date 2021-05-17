@@ -1,0 +1,20 @@
+config:
+  target: "https://lambda.<AWS_REGION>.amazonaws.com"
+  phases:
+    - duration: 600
+      arrivalRate: 10
+      rampTo: 50
+  plugins:
+    aws-sigv4:
+      serviceName: lambda
+    cloudwatch:
+      namespace: "WhatsNew-LambdaPC"
+      testName: "<FUNCTION_NAME>"
+
+scenarios:
+  - flow:
+    - post:
+        url: "/2015-03-31/functions/<FUNCTION_ALIAS>/invocations"
+        json:
+          foo: bar
+        beforeRequest: addAmazonSignatureV4

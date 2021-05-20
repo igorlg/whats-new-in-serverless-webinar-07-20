@@ -4,6 +4,15 @@ config:
     - duration: 600
       arrivalRate: 10
       rampTo: 50
+    - duration: 300
+      arrivalRate: 2
+      rampTo: 10
+    - duration: 60
+      arrivalRate: 1
+      rampTo: 1
+    - duration: 840
+      arrivalRate: 5
+      rampTo: 200
   plugins:
     aws-sigv4:
       serviceName: lambda

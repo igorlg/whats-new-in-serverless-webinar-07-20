@@ -4,69 +4,87 @@
             "height": 6,
             "width": 9,
             "y": 0,
-            "x": 15,
+            "x": 9,
             "type": "metric",
             "properties": {
-                "period": 1,
                 "metrics": [
-                    [ "AWS/Lambda", "Duration", "FunctionName", "${WhatsNewLambdaPcFunction}", "Resource", "${WhatsNewLambdaPcFunction}:${Alias}", { "stat": "Minimum" } ],
-                    [ "...", { "stat": "Average" } ],
-                    [ "...", { "stat": "Maximum" } ]
+                    [ "AWS/Lambda", "Duration", "FunctionName", "${WhatsNewLambdaPcFunction}", "Resource", "${WhatsNewLambdaPcFunction}:${Alias}", { "stat": "Minimum", "visible": false, "id": "m1" } ],
+                    [ "...", { "id": "m2" } ],
+                    [ "...", { "stat": "Maximum", "id": "m3" } ]
                 ],
+                "period": 1,
                 "region": "ap-southeast-2",
                 "view": "timeSeries",
                 "stacked": false,
                 "title": "Execution Duration",
-                "liveData": true
-            }
-        },
-        {
-            "height": 9,
-            "width": 12,
-            "y": 6,
-            "x": 12,
-            "type": "metric",
-            "properties": {
-                "metrics": [
-                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${WhatsNewLambdaPcFunction}", "Resource", "${WhatsNewLambdaPcFunction}:${Alias}", { "label": "ConcurrentExecutions" } ],
-                    [ ".", "ProvisionedConcurrentExecutions", ".", "." ],
-                    [ ".", "ProvisionedConcurrencySpilloverInvocations", ".", "." ]
-                ],
-                "period": 1,
-                "region": "ap-southeast-2",
-                "title": "Concurrent executions",
-                "view": "timeSeries",
-                "stacked": false,
                 "liveData": true,
-                "stat": "Maximum"
+                "stat": "Average"
             }
         },
         {
             "height": 9,
-            "width": 12,
+            "width": 9,
             "y": 6,
             "x": 0,
             "type": "metric",
             "properties": {
-                "period": 1,
                 "metrics": [
-                    [ "AWS/Lambda", "ProvisionedConcurrencyUtilization", "FunctionName", "${WhatsNewLambdaPcFunction}", "Resource", "${WhatsNewLambdaPcFunction}:${Alias}", { "stat": "Maximum" } ]
+                    [ "AWS/Lambda", "ProvisionedConcurrencySpilloverInvocations", "FunctionName", "${WhatsNewLambdaPcFunction}", { "label": "Spillover Invocations" } ],
+                    [ ".", "ProvisionedConcurrentExecutions", ".", ".", { "label": "Executions by Provisioned Concurrency" } ]
                 ],
+                "period": 1,
+                "region": "ap-southeast-2",
+                "title": "Executions under PC vs OnDemand",
+                "view": "timeSeries",
+                "stacked": true,
+                "liveData": true,
+                "stat": "Maximum",
+                "setPeriodToTimeRange": true,
+                "labels": {
+                    "visible": true
+                }
+            }
+        },
+        {
+            "height": 9,
+            "width": 9,
+            "y": 6,
+            "x": 9,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "FILL(METRICS(), 0)", "label": "PC Utilization %", "id": "e1", "region": "ap-southeast-2", "visible": false } ],
+                    [ "AWS/Lambda", "ProvisionedConcurrencyUtilization", "FunctionName", "${WhatsNewLambdaPcFunction}", "Resource", "${WhatsNewLambdaPcFunction}:${Alias}", { "id": "m1", "label": "PC Utilization %" } ]
+                ],
+                "period": 1,
                 "region": "ap-southeast-2",
                 "yAxis": {
                     "left": {
-                        "max": 1
+                        "max": 1,
+                        "showUnits": true,
+                        "min": 0
                     }
                 },
                 "view": "timeSeries",
                 "stacked": false,
-                "title": "ProvisionedConcurrencyUtilization",
-                "liveData": true
+                "title": "PC Utilization",
+                "liveData": true,
+                "stat": "Average",
+                "setPeriodToTimeRange": true,
+                "annotations": {
+                    "horizontal": [
+                        {
+                            "label": "Threshold",
+                            "value": 0.7,
+                            "fill": "above"
+                        }
+                    ]
+                }
             }
         },
         {
-            "height": 3,
-            "width": 15,
+            "height": 6,
+            "width": 9,
             "y": 0,
             "x": 0,
             "type": "metric",
@@ -90,24 +108,53 @@
             }
         },
         {
-            "height": 3,
-            "width": 15,
-            "y": 3,
-            "x": 0,
             "type": "metric",
+            "x": 18,
+            "y": 0,
+            "width": 6,
+            "height": 6,
             "properties": {
                 "metrics": [
-                    [ "AWS/Lambda", "ProvisionedConcurrentExecutions", "FunctionName", "${WhatsNewLambdaPcFunction}" ],
-                    [ ".", "ProvisionedConcurrencySpilloverInvocations", ".", "." ],
-                    [ ".", "ProvisionedConcurrencyInvocations", ".", ".", { "visible": false, "stat": "Sum" } ]
+                    [ { "expression": "m1 / m2", "label": "[maxTime: ${!MAX_TIME}]", "id": "e1", "region": "ap-southeast-2" } ],
+                    [ "AWS/Lambda", "ProvisionedConcurrentExecutions", "FunctionName", "${WhatsNewLambdaPcFunction}", "ExecutedVersion", "1", "Resource", "${WhatsNewLambdaPcFunction}:${Alias}", { "id": "m1", "visible": false } ],
+                    [ ".", "ProvisionedConcurrencyUtilization", ".", ".", ".", ".", ".", ".", { "id": "m2", "visible": false } ]
                 ],
                 "view": "singleValue",
                 "region": "ap-southeast-2",
-                "start": "-PT1H",
-                "end": "P0D",
                 "period": 1,
-                "title": "PC Utilization",
+                "stat": "Maximum",
+                "title": "Allocated Provisioned Concurrency",
                 "liveData": true
+            }
+        },
+        {
+            "type": "metric",
+            "x": 18,
+            "y": 6,
+            "width": 6,
+            "height": 9,
+            "properties": {
+                "metrics": [
+                    [ { "expression": "m1 / m2", "label": "Allocated PC", "id": "e1" } ],
+                    [ "AWS/Lambda", "ProvisionedConcurrentExecutions", "FunctionName", "${WhatsNewLambdaPcFunction}", "ExecutedVersion", "1", "Resource", "${WhatsNewLambdaPcFunction}:${Alias}", { "id": "m1", "visible": false } ],
+                    [ ".", "ProvisionedConcurrencyUtilization", ".", ".", ".", ".", ".", ".", { "id": "m2", "visible": false } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-southeast-2",
+                "stat": "Maximum",
+                "period": 1,
+                "title": "Allocated PC"
+            }
+        },
+        {
+            "type": "text",
+            "x": 0,
+            "y": 15,
+            "width": 12,
+            "height": 1,
+            "properties": {
+                "markdown": "Function: [${WhatsNewLambdaPcFunction}](https://${AWS::Region}.console.aws.amazon.com/lambda/home?region=${AWS::Region}#/functions/${WhatsNewLambdaPcFunction}?tab=configure)"
             }
         }
     ]

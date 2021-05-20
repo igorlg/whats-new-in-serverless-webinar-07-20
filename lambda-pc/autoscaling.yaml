@@ -30,12 +30,12 @@ Resources:
         - ScheduledActionName: ScaleOut
           Schedule: !Ref ScaleOutSchedule
           ScalableTargetAction:
-            MaxCapacity: 50
+            MaxCapacity: 500
             MinCapacity: 50
         - ScheduledActionName: ScaleIn
           Schedule: !Ref ScaleInSchedule
           ScalableTargetAction:
-            MaxCapacity: 1
+            MaxCapacity: 50
             MinCapacity: 1
   WhatsNewLambdaPcFunctionScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
